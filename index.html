@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DriveClone - Gerador de Script</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin: auto;
+        }
+        h2 { color: #1a73e8; margin-top: 0; }
+        label { font-weight: bold; display: block; margin-top: 15px; }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            flex: 1;
+        }
+        button:hover { background-color: #1557b0; }
+        .btn-copy {
+            background-color: #34a853;
+        }
+        .btn-copy:hover { background-color: #2e8b46; }
+        textarea {
+            width: 100%;
+            height: 220px;
+            margin-top: 15px;
+            padding: 10px;
+            font-family: monospace;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fafafa;
+            box-sizing: border-box;
+        }
+        .instructions {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .success-msg {
+            color: #34a853;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>DriveClone - Gerador Automático</h2>
+    <p>Cole os links das pastas de origem e destino abaixo para gerar o seu script personalizado.</p>
+
+    <label for="urlOrigem">Link ou ID da Pasta de Origem:</label>
+    <input type="text" id="urlOrigem" placeholder="Ex: https://drive.google.com/drive/folders/1O0n... ou ID direto">
+    <div class="instructions">Cole o link completo da pasta que deseja copiar.</div>
+
+    <label for="urlDestino">Link ou ID da Pasta de Destino:</label>
+    <input type="text" id="urlDestino" placeholder="Ex: https://drive.google.com/drive/folders/1dDu... ou ID direto">
+    <div class="instructions">Cole o link completo da pasta onde a cópia será salva.</div>
+
+    <button onclick="gerarScript()">Gerar Script Pronto</button>
+
+    <label for="resultado">Código Apps Script Gerado:</label>
+    <textarea id="resultado" readonly></textarea>
+    
+    <div class="btn-container">
+        <button class="btn-copy" onclick="copiarCodigo()">Copiar Código</button>
+    </div>
+    <div id="msgSucesso" class="success-msg">Código copiado para a área de transferência!</div>
+</div>
+
+<script>
+function extrairId(texto) {
+    texto = texto.trim();
+    if (texto.includes('drive.google.com')) {
+        var match = texto.match(/\/folders\/([a-zA-Z0-9-_]+)/);
+        if (match && match[1]) {
+            return match[1];
+        }
+    }
+    return texto;
+}
+
+function gerarScript() {
+    var inputOrigem = document.getElementById('urlOrigem').value;
+    var inputDestino = document.getElementById('urlDestino').value;
+
+    var idOrigem = extrairId(inputOrigem);
+    var idDestino = extrairId(inputDestino);
+
+    if (!idOrigem || !idDestino) {
+        alert("Por favor, preencha os campos de origem e destino corretamente!");
+        return;
+    }
+
+    var codigoPronto = `function copiarPastaInteira() {
+  // ID extraído automaticamente da Origem
+  var idPastaOrigem = "${idOrigem}";
+  
+  // ID extraído automaticamente do Destino
+  var idPastaDestino = "${idDestino}";
+  
+  var pastaOrigem = DriveApp.getFolderById(idPastaOrigem);
+  var pastaDestino = DriveApp.getFolderById(idPastaDestino);
+  
+  // Cria a cópia da pasta principal no destino
+  var novaPasta = pastaDestino.createFolder(pastaOrigem.getName() + " (Cópia)");
+  
+  // Copia o conteúdo recursivamente (arquivos e subpastas)
+  copiarConteudo(pastaOrigem, novaPasta);
+  
+  Logger.log("Cópia concluída com sucesso!");
+}
+
+function copiarConteudo(pastaOrigem, pastaDestino) {
+  var arquivos = pastaOrigem.getFiles();
+  while (arquivos.hasNext()) {
+    var arquivo = arquivos.next();
+    arquivo.makeCopy(arquivo.getName(), pastaDestino);
+  }
+  
+  var subpastas = pastaOrigem.getFolders();
+  while (subpastas.hasNext()) {
+    var subpastaOrigem = subpastas.next();
+    var subpastaDestino = pastaDestino.createFolder(subpastaOrigem.getName());
+    copiarConteudo(subpastaOrigem, subpastaDestino);
+  }
+}`;
+
+    document.getElementById('resultado').value = codigoPronto;
+    document.getElementById('msgSucesso').style.display = 'none';
+}
+
+function copiarCodigo() {
+    var textarea = document.getElementById('resultado');
+    if (!textarea.value) {
+        alert("Gere o script primeiro antes de copiar!");
+        return;
+    }
+    
+    textarea.select();
+    textarea.setSelectionRange(0, 99999);
+    
+    try {
+        var sucesso = document.execCommand('copy');
+        if (sucesso) {
+            var msg = document.getElementById('msgSucesso');
+            msg.style.display = 'block';
+            setTimeout(function() {
+                msg.style.display = 'none';
+            }, 3000);
+        } else {
+            alert("Não foi possível copiar automaticamente. Selecione o texto e use Ctrl+C.");
+        }
+    } catch (err) {
+        alert("Erro ao tentar copiar. Selecione o texto manualmente.");
+    }
+}
+</script>
+
+</body>
+</html>
