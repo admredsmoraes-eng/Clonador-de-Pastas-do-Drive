@@ -6,7 +6,7 @@ O gerador (`index.html`) recebe os links da pasta de origem e da pasta de destin
 
 ## Como usar
 
-1. Abra o `index.html` no navegador (ou a versão publicada no GitHub Pages).
+1. Abra o `index.html` no navegador https://admredsmoraes-eng.github.io/Clonador-de-Pastas-do-Drive/.
 2. Cole o link completo da **pasta de origem** (a que você quer copiar) e da **pasta de destino** (onde a cópia ficará).
 3. Clique em **Gerar Script Pronto**.
 4. Clique em **Copiar Código**.
